@@ -61,12 +61,11 @@
                           <div id="err_subj"></div>
 						              <select id="subject" name="subject" class="form-group form-control">
   							             <option value="" selected>Subject</option>
-  							             <option value="Website">Website Design & Development</option>
-  							             <option>Wordpress Development</option>
-						                 <option>Search Engine Optimization</option>
-                             <option>Mobile Website</option>
-  							             <option>I Want to General Talk</option>
-                             <option>Other</option>
+                             <?if($services_information):?>
+                               <?foreach($services_information as $ksi => $vsi):?>
+                                   <option value="<?=$vsi->name_of_service?>"><?=ucfirst($vsi->name_of_service)?></option>
+                               <?endforeach;?>
+                             <?endif;?>
 						              </select>
                         </div>
                         <div class="col-sm-12">
@@ -76,7 +75,7 @@
   						            </div>
                         </div>
                         <div class="text-center">      
-                          <input type="submit" id="submit" class="load-more-button subm" value="Send">
+                          <input type="submit" id="submit" name="submitform" class="load-more-button subm" value="Send">
                         </div>
                       </form>
                     </div>
@@ -103,6 +102,7 @@
   $('#submit').on('click',function(e){
     e.preventDefault();
     $('.err').remove();
+
     var name, email, website, address, subject, message;
     name = $('#name').val();
     email = $('#email').val();
@@ -110,6 +110,7 @@
     address = $('#address').val();
     subject = $('#subject').val();
     message = $('#message').val();
+
     if (name == '') {
       $('#err_name').append('<div class="err">Name field is required.</div>');
     }
@@ -123,32 +124,100 @@
       $('#err_subj').append('<div class="err">Subject field is required.</div>');
     }
     if (name != '' && email != '' && message != '' && subject != '') {
-      alert('ok');
-    }
-    // alert('name:'+name);
-    // alert('email:'+email);
-    // alert('website:'+website);
-    // alert('address:'+address);
-    // alert('subject:'+subject);
-    // alert('message:'+message);
-  });
-</script>
-<script>
-    function myMap() {
-      var mapCanvas = document.getElementById("map");
-      var myCenter = new google.maps.LatLng(14.642110,121.122282); 
-      var mapOptions = {center: myCenter, zoom: 15};
-      var map = new google.maps.Map(mapCanvas,mapOptions);
-      var marker = new google.maps.Marker({
-        position: myCenter,
-        animation: google.maps.Animation.BOUNCE
-      });
-      marker.setMap(map);
+      // alert('ok');
+       $('.preloader').show();
+       $('.kenthinking').text('Submitting your message. hold on for a sec. Thanks!');
+        // create a js object with key values for your post data
+        var postData = {
+          'sender_name' : name,
+          'sender_email' : email,
+          'sender_website' : website,
+          'sender_address' : address,
+          'sender_subject' : subject,
+          'sender_message' : message,
+        };
+               $.ajax({
+                     type: "POST",
+                     url:  base_url + "Message/ajax_message",
+                     dataType: 'json', // what to expect back from the server
+                     data: postData, //assign the var here 
+                     cache: true,
+                     success: function(msg){
+                      console.log(msg); 
+                      $('#name').hide();
+                      $('#email').hide();
+                      $('#website').hide();
+                      $('#address').hide();
+                      $('#subject').hide();
+                      $('#message').hide();
+                      $('#submit').hide();
 
-      var infowindow = new google.maps.InfoWindow({
-        content: "Hello I'm here."
-      });
-      infowindow.open(map,marker);
+                      if (msg['status']) {
+                          $('.text-center').append("</br><p id='succc' style='color:green'><span class='fa fa-check'> Thank you for your <em>message</em>.</p>");
+                      } else{
+                          $('.text-center').append("</br><p id='errr' style='color:red'><span class='fa fa-close'> Please try again. your <em>message</em> fails.</p>");
+                      }
+
+                      $('.text-center').append("<button id='sub_message'>Another</button>");
+
+                      // Save data to sessionStorage
+                      sessionStorage.setItem('key', 'message_done');
+
+                      setTimeout(function(){
+                           $('#succc').hide();
+                           $('#errr').hide();
+                      },11000);
+
+                     }, error: function (msg) {
+                        // console.log(msg);
+                       }
+                });
+        setTimeout(function(){ $('.preloader').hide(); }, 3000);
     }
+  });
+  // Get saved data from sessionStorage
+  var data = sessionStorage.getItem('key');
+  if (data == 'message_done') {
+      $('#name').hide();
+      $('#email').hide();
+      $('#website').hide();
+      $('#address').hide();
+      $('#subject').hide();
+      $('#message').hide();
+      $('#submit').hide();
+      $('.text-center').append("</br><p id='succc' style='color:green'><span class='fa fa-envelope-o'></span> Your <em>message</em> is already on my bucket. Thanks.</p>");
+      $('.text-center').append("<button id='sub_message'>Another</button>");
+  } 
+  // another message
+  $('#sub_message').on('click', function(){
+    // Remove saved data from sessionStorage
+    sessionStorage.removeItem('key');
+    $('#sub_message').hide();
+    $('#succc').hide();
+    $('#name').show();
+    $('#email').show();
+    $('#website').show();
+    $('#address').show();
+    $('#subject').show();
+    $('#message').show();
+    $('#submit').show();
+  });
+  // map
+  function myMap() {
+    var mapCanvas = document.getElementById("map");
+    var myCenter = new google.maps.LatLng(14.642110,121.122282); 
+    var mapOptions = {center: myCenter, zoom: 15};
+    var map = new google.maps.Map(mapCanvas,mapOptions);
+    var marker = new google.maps.Marker({
+      position: myCenter,
+      animation: google.maps.Animation.BOUNCE
+    });
+    marker.setMap(map);
+
+    var infowindow = new google.maps.InfoWindow({
+      content: "Hello I'm here."
+    });
+    infowindow.open(map,marker);
+  }
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDODmjj4sggrTuMFPS0SBNNTyfAkDbIY50&callback=myMap"></script>

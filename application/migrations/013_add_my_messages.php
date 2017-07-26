@@ -41,6 +41,11 @@ class Migration_Add_my_messages extends CI_Migration {
                                 'type' => 'TEXT',
                                 'default' => NULL
                         ),
+                        'new' => array(
+                                'type' => 'TINYINT',
+                                'constraint' => 3,
+                                'default' => 1
+                        ),
                         'created' => array(
                                 'type' => 'DATETIME'
                         ),
